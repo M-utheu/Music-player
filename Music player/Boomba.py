@@ -16,7 +16,7 @@ root.rowconfigure(0,weight = 1)
 root.columnconfigure(0,weight = 1)
 root.title('MP3 Player')
 root.iconbitmap('apple_music_android_logo_icon_134021.ico')
-root.geometry('750x450')
+root.geometry('750x550')
 
 page1 = Frame(root)
 page2 = Frame(root)
@@ -36,6 +36,9 @@ play_img = PhotoImage(file=r"play.png")
 stop_img = PhotoImage(file=r"stop.png")
 shuffle_img = PhotoImage(file=r"shuffle.png")
 deactivated_shuffle_img = PhotoImage(file=r"shuffle_deactivated.png")
+loop_img = PhotoImage(file = r"loop.png")
+activated_loop_img = PhotoImage(file = r"loop_activated.png")
+
 controls = Frame(root)
 
 status_bar = Label(root, text='', bd=2, relief=GROOVE, anchor=E)
@@ -70,7 +73,7 @@ def music_play_time():
 
     status_bar.after(1000, music_play_time)
 
-music_play_time()
+
 
 
 def play_music(play):
@@ -80,9 +83,6 @@ def play_music(play):
     pygame.mixer.music.load(song)
     pygame.mixer.music.play(loops=0)
 
-def stop_music():
-    pygame.mixer.music.stop()
-    play_pause_button.configure(image=pause_img)
 
 paused = False
 
@@ -103,14 +103,8 @@ def pause_music():
 
 
 def next_song():
-    no_of_songs = songlist.size()  - 1
     nextsong = songlist.curselection()
     nextsong = nextsong[0]+1
-    print (nextsong, no_of_songs)
-
-    if nextsong > no_of_songs:
-        nextsong = 0
-
     song = songlist.get(nextsong)
     song = f"{full_path}{song}.mp3"
     pygame.mixer.music.load(song)
@@ -135,6 +129,39 @@ def previous_song():
     songlist.activate(prevsong)
     songlist.selection_set(prevsong, last=None)
 
+def next_songloop():
+    no_of_songs = songlist.size()  - 1
+    nextsong = songlist.curselection()
+    nextsong = nextsong[0]+1
+
+    if nextsong > no_of_songs:
+        nextsong = 0
+
+    song = songlist.get(nextsong)
+    song = f"{full_path}{song}.mp3"
+    pygame.mixer.music.load(song)
+    pygame.mixer.music.play(loops=0)
+
+    songlist.selection_clear(0, END)
+    songlist.activate(nextsong)
+    songlist.selection_set(nextsong, last=None)
+
+def previous_songloop():
+    no_of_songs = songlist.size() - 1
+    prevsong = songlist.curselection()
+    prevsong = prevsong[0] - 1
+    print(no_of_songs, prevsong)
+    if prevsong < 0:
+        prevsong = no_of_songs
+
+    song = songlist.get(prevsong)
+    song = f"{full_path}{song}.mp3"
+    pygame.mixer.music.load(song)
+    pygame.mixer.music.play(loops=0)
+
+    songlist.selection_clear(0, END)
+    songlist.activate(prevsong)
+    songlist.selection_set(prevsong, last=None)
 def fwd_with_shuffle():
     no_of_songs = songlist.size()
     nextsong = songlist.curselection()
@@ -187,6 +214,17 @@ def no_shuffle():
     back_button.configure(command = previous_song)
     shuffle_button.configure(image = deactivated_shuffle_img, command = shuffle)
 
+def loop():
+    forward_button.configure(command=next_songloop)
+    back_button.configure(command=previous_songloop)
+    loop_button.configure(image=activated_loop_img, command=noloop)
+
+def noloop():
+    forward_button.configure(command=next_song)
+    back_button.configure(command=previous_song)
+    loop_button.configure(image=loop_img, command=loop)
+
+
 def show_frame(frame):
     frame.tkraise()
 
@@ -197,14 +235,15 @@ def slide(z):
 def load_music_player():
     show_frame(page2)
 
-    songlist.pack()
+    songlist.pack(side = LEFT,anchor = NW)
 
     controls.pack()
-    back_button.grid(row=0, column=0, padx=10, pady=40)
-    forward_button.grid(row=0, column=1, padx=10, pady=40)
-    play_pause_button.grid(row=0, column=2, padx=10, pady=40)
-    stop_button.grid(row=0, column=4, padx=10, pady=40)
-    shuffle_button.grid(row=0, column=5, padx=10, pady=40)
+    back_button.grid(row=0, column=1, padx=5, pady=40)
+    forward_button.grid(row=0, column=3, padx=5, pady=40)
+    play_pause_button.grid(row=0, column=2, padx=5, pady=40)
+    shuffle_button.grid(row=0, column=4, padx=5, pady=40)
+    loop_button.grid(row = 0, column = 0, padx = 5, pady = 40)
+
 
     my_menu = Menu(root)
     root.config(menu=my_menu)
@@ -212,25 +251,33 @@ def load_music_player():
     addsongmenu = Menu(my_menu)
     my_menu.add_cascade(label="Add songs", menu=addsongmenu)
     addsongmenu.add_command(label="Add Songs to Playlist", command=add_songs)
+    music_play_time()
 
     song_slider_label.pack(pady=10)
     song_slider.pack(pady=30)
 
-show_frame(page1)
+
 
 def destroybutton(button):
     load_music_player()
     button.destroy()
+    label.destroy()
 
-start_button = Button(root, image=play_img, borderwidth=0, command=lambda: destroybutton(start_button))
-start_button.place(x=0, y=0)
+show_frame(page1)
+background_img = PhotoImage(file = r"bckgrnd.png")
+label = Label(root, image = background_img)
+label.pack()
+start_img = PhotoImage(file = r"start.png")
+start_button = Button(root, image=start_img, borderwidth=0, command=lambda: destroybutton(start_button))
+start_button.place(x=320, y=340)
+
 
 controls = Frame(root)
 back_button = Button(controls, image=back_img, borderwidth=0, command=previous_song)
 forward_button = Button(controls, image=forward_img, borderwidth=0, command=next_song)
 play_pause_button = Button(controls, image=play_img, borderwidth=0, command=pause_music)
-stop_button = Button(controls, image=stop_img, borderwidth=0, command=stop_music)
 shuffle_button = Button(controls, image=deactivated_shuffle_img, borderwidth=0, command=shuffle)
+loop_button = Button(controls, image = loop_img, borderwidth = 0, command = loop)
 songlist.bind("<<ListboxSelect>>", play_music)
 
 song_slider = ttk.Scale(root, from_=0, to=100, orient=HORIZONTAL, value = 0, command=slide, length=400)
